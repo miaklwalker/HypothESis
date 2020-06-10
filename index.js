@@ -25,7 +25,7 @@ class Expect {
         console.log('failed')
     }
     verify(test,expected,received=this.received){
-        return test ? this.pass(expected,received) : this.fail(expected,received);
+        return (test && !this._not) ? this.pass(expected,received) : this.fail(expected,received);
     }
     /**
      * @name any
@@ -50,17 +50,62 @@ class Expect {
         let notNullOrUndefined = (this.received !== undefined && this.received !== null);
         this.verify(notNullOrUndefined,'We expected the received value to not be null or undefined')
     }
+
+    /**
+     * @name arrayContaining
+     * @description When passed an array, checks if the received value matches , all expected values
+     * @param expected {Array | Number}
+     * @example
+     *  let arrayContaining_test = new Expect([1,2,3]).arrayContaining(1);
+     *  let arrayContaining_test_2 = new Expect([1,2,3]).arrayContaining([1,2]);
+     */
     arrayContaining(expected){
         let expectedIsArray = Array.isArray(expected);
-        let recievedIsArray = Array.isArray(this.received);
-        if(expectedIsArray&&recievedIsArray){
-            let containsAll = expected.map(member=>this.received.includes(member)).includes(false);
+        let receivedIsArray = Array.isArray(this.received);
+        if(expectedIsArray&&receivedIsArray){
+            let containsAll = !(expected.map(member=>this.received.includes(member)).includes(false));
             this.verify(containsAll,expected)
-        }else if(recievedIsArray){
+        }else if(receivedIsArray){
             this.verify(this.received.includes(expected),expected)
         }else{
             this.verify(false,`Array Containing expects to receive a Array`)
         }
+    }
+
+    /**
+     * @name not
+     * @description Sets the negation flag for the current test that reverses the results of a current test.
+     * If the current test would fail it passes and vice versa
+     * @returns {Expect}
+     * @example expect(1).not.toBe(2) // This will pass
+     */
+    get not(){
+        this._not = true;
+        return this;
+    }
+
+    /**
+     * @name toBe
+     * @description Checks for exact equality with Onject.is(), This is best used for comparing primitive values
+     * or referential values
+     * @examples
+     *  const add = (x,y)=> x + y;
+     *  let toBe_test  = new Expect(add(1,1)).toBe(2);
+     * @param expected
+     */
+    toBe(expected){
+        let valuesMatch = Object.is(this.received,expected);
+        this.verify(valuesMatch,expected);
+    }
+    toEqual(expected){
+        let result = true;
+        let compareToReceived = (objectA,objectB)=>{
+            let ObjectAKeys = Object.keys(objectA);
+            let ObjectBKeys = Object.keys(objectB);
+
+        };
+        compareToReceived(this.received,expected);
+        this.verify(result,expected);
     }
  }
 
@@ -75,4 +120,19 @@ class Expect {
  let any_test_2 = new Expect(bar).any(String);
 
  let anything_test = new Expect(6).anything();
- let anything_test_2 = new Expect(null).anything();
+ let anything_test_2 = new Expect(null).not.anything();
+
+ let arrayContaining_test = new Expect([1,2,3]).arrayContaining(1);
+ let arrayContaining_test_2 = new Expect([1,2,3]).arrayContaining([1,2]);
+
+ const add = (x,y)=> x + y;
+ let toBe_test  = new Expect(add(1,1)).toBe(2);
+
+ let canA = {
+     flavor:'orange',
+     calories:12,
+ };
+ let canB = {
+     flavor:'orange'
+ };
+ let toEqual_test = new Expect(canA).toEqual(canB);
