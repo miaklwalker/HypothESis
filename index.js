@@ -114,9 +114,9 @@ class Expect {
 * Test Verification *
 *********************
 */
- let foo = 6
+ let foo = 6;
  let any_test = new Expect(foo).any(Number);
- let bar = 'S'
+ let bar = 'S';
  let any_test_2 = new Expect(bar).any(String);
 
  let anything_test = new Expect(6).anything();
