@@ -8,7 +8,12 @@ const OBJECT = 'OBJECT';
 const SYMBOL = 'SYMBOL';
 
 
-
+/**
+ * @name is
+ * @description
+ * @example
+ * @param {*} valueA 
+ */
 function is (valueA){
     if(Array.isArray(valueA)){
         return ARRAY;
