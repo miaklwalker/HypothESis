@@ -44,8 +44,8 @@ function is (valueA){
  */
 function deepEquals(objectA,objectB){
     const equals = (x,y) => Object.is(x,y);
-    let results = []
-    let isObject = ( equals(typeof objectA, 'object') && equals(typeof objectB, 'object'))
+    let results = [];
+    let isObject = ( equals(typeof objectA, 'object') && equals(typeof objectB, 'object'));
         if(isObject){
             let keysA = Object.keys(objectA);
             let keysB = Object.keys(objectB);
@@ -58,10 +58,10 @@ function deepEquals(objectA,objectB){
                             let valueB = objectB[prop];
                             switch(is(valueA)){
                                 case PRIMITIVE:
-                                    results.push(equals(valueA,valueB))
+                                    results.push(equals(valueA,valueB));
                                     break;
                                 case OBJECT:
-                                    results.push(deepEquals(valueA,valueB))
+                                    results.push(deepEquals(valueA,valueB));
                                     break;
                                 case ARRAY:
                                     valueA.forEach((element,index) => {
@@ -75,12 +75,12 @@ function deepEquals(objectA,objectB){
                                 case SET :
                                     valueA.forEach(value=>{
                                         results.push(valueB.has(value))
-                                    })
+                                    });
                                     break;
                                 case MAP :    
                                 valueA.forEach((value,key)=>{
-                                    results.push(equal(valueB.get(key),value))
-                                })
+                                    results.push(equals(valueB.get(key),value))
+                                });
                                     break;
                             }
                         }
@@ -102,7 +102,7 @@ function deepEquals(objectA,objectB){
 /**
  * @class Expect
  * @description Allows the user to pass a value to test and value to verify it against
- * @argument received
+ * @argument received {any}
  * @example Expect(someFunction).toBe(someValue)
  * @property received - The value received ;
  * @property isObject - When expect is created it checks if received is a object;
@@ -128,18 +128,20 @@ class Expect {
     verify(test,expected,received=this.received){
         return (test && !this._not) ? this.pass(expected,received) : this.fail(expected,received);
     }
+
     /**
      * @name any
-     * @description When passed a object constructor , will check if recieved value was created with that constructor
+     * @description When passed a object constructor , will check if received value was created with that constructor
      * @example 
      * let foo = 6
      * let any_test = new Expect(foo).any(Number);
      * let any_test_2 = new Expect(foo).any(String); 
-     * @param {Constructor} expected 
+     * @param expected {constructor}
      */
     any(expected){
         this.verify(typeof this.received === typeof expected(),expected); 
     }
+
     /**
      * @name anything
      * @description Passes when recieved is anything besides Null or Undefined.
@@ -192,17 +194,55 @@ class Expect {
      * @examples
      *  const add = (x,y)=> x + y;
      *  let toBe_test  = new Expect(add(1,1)).toBe(2);
-     * @param expected
+     * @param expected {any}
      */
     toBe(expected){
         let valuesMatch = Object.is(this.received,expected);
         this.verify(valuesMatch,expected);
     }
+
+    /**
+     * @name toEqual
+     * @description This matcher is used to check for deep equality between two objects.
+     * This means that it recursively checks every property and value, for equality.
+     * It uses Object.is() internally for equality.
+     * @example
+     *  let canA = {
+     *    flavor:'orange',
+     *    calories:12,
+     *    };
+     *  let canB = {
+     *    flavor:'orange',
+     *    calories:12
+     *  };
+     *  let toEqual_test = new Expect(canA).toEqual(canB);
+     * @param expected {object}
+     */
     toEqual(expected){
+        let receivedType = is(this.received);
+        if (receivedType === OBJECT){
+            this.verify(deepEquals(this.received,expected),expected);
+        }else{
+            this.verify(false,'toEquals is mainly used to check for deep equality in objects');
+        }
+    }
 
-        let result = deepEquals(this.received,expected)[0];
-
-        this.verify(result,expected);
+    stringContaining(expected){
+        let strArr = Array.from(expected);
+        let strToCheckArr = Array.from(this.received);
+        let end = strToCheckArr.length-strArr.length;
+        let result = false;
+        for(let i = 0 ; i < end+1 ; i++){
+            let subset = strToCheckArr.slice(i,i+str.length)
+            if( subset.join('') === strArr.join('')){
+                result = true;
+            }
+            else{
+                console.log(i)
+                console.log(subset.join(''))
+            }
+        }
+        return result;
     }
  }
 
