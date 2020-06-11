@@ -1,3 +1,99 @@
+const PRIMITIVE = 'PRIMITIVE';
+const SET = 'SET';
+const MAP = 'MAP';
+const WEAKMAP = 'WEAKMAP';
+const WEAKSET = 'WEAKSET';
+const ARRAY = 'ARRAY';
+const OBJECT = 'OBJECT';
+const SYMBOL = 'SYMBOL';
+
+
+
+function is (valueA){
+    if(Array.isArray(valueA)){
+        return ARRAY;
+    }else if(valueA instanceof Set){
+        return SET;
+    }else if(valueA instanceof Map){
+        return MAP;
+    }else if( valueA instanceof WeakMap){
+        return WEAKMAP;
+    }else if(valueA instanceof WeakSet){
+        return WEAKSET;
+    }else if(valueA instanceof Symbol){
+        return SYMBOL;
+    }else if (typeof valueA === 'object'){
+        return OBJECT;
+    }else{
+        return PRIMITIVE;
+    }
+}
+
+
+
+/**
+ * @name deepEqual
+ * @description Evaluates Two Objects for deep equality, Meaning all properties and values match
+ * @param {any} objectA 
+ * @param {any} objectB 
+ */
+function deepEquals(objectA,objectB){
+    const equals = (x,y) => Object.is(x,y);
+    let results = []
+    let isObject = ( equals(typeof objectA, 'object') && equals(typeof objectB, 'object'))
+        if(isObject){
+            let keysA = Object.keys(objectA);
+            let keysB = Object.keys(objectB);
+            if(equals(keysA.length,keysB.length)){
+                let propsMatch = keysA.every(key=>keysB.includes(key));
+                if(propsMatch){
+                    for(let prop in objectA){
+                        if(objectA.hasOwnProperty(prop)){
+                            let valueA = objectA[prop];
+                            let valueB = objectB[prop];
+                            switch(is(valueA)){
+                                case PRIMITIVE:
+                                    results.push(equals(valueA,valueB))
+                                    break;
+                                case OBJECT:
+                                    results.push(deepEquals(valueA,valueB))
+                                    break;
+                                case ARRAY:
+                                    valueA.forEach((element,index) => {
+                                        if(typeof element !== 'object'){
+                                            results.push(equals(element,valueB[index]))
+                                        }else{
+                                            results.push(deepEquals(element,valueB[index]))
+                                        }
+                                    });
+                                    break;
+                                case SET :
+                                    valueA.forEach(value=>{
+                                        results.push(valueB.has(value))
+                                    })
+                                    break;
+                                case MAP :    
+                                valueA.forEach((value,key)=>{
+                                    results.push(equal(valueB.get(key),value))
+                                })
+                                    break;
+                            }
+                        }
+                    }
+                }else{
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        }else{
+            return equals(objectA,objectB);
+        }
+    return results.every(result=>result);
+}
+
+
+
 /**
  * @class Expect
  * @description Allows the user to pass a value to test and value to verify it against
@@ -86,7 +182,7 @@ class Expect {
 
     /**
      * @name toBe
-     * @description Checks for exact equality with Onject.is(), This is best used for comparing primitive values
+     * @description Checks for exact equality with Object.is(), This is best used for comparing primitive values
      * or referential values
      * @examples
      *  const add = (x,y)=> x + y;
@@ -98,13 +194,9 @@ class Expect {
         this.verify(valuesMatch,expected);
     }
     toEqual(expected){
-        let result = true;
-        let compareToReceived = (objectA,objectB)=>{
-            let ObjectAKeys = Object.keys(objectA);
-            let ObjectBKeys = Object.keys(objectB);
 
-        };
-        compareToReceived(this.received,expected);
+        let result = deepEquals(this.received,expected)[0];
+
         this.verify(result,expected);
     }
  }
